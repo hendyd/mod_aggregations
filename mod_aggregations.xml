@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="module" version="3.0" client="site" method="upgrade">
+	<name>Aggregation web form</name>
+	<author>David Hendy</author>
+	<creationDate>August 2020</creationDate>
+	<copyright>Copyright (C) 2020 2buy2.com</copyright>
+	<license>GNU General Public License version 2 or later</license>
+	<authorEmail>david.hendy@2buy2.com</authorEmail>
+	<authorURL>http://www.2buy2.com/</authorURL>
+	<version>0.0.1</version>
+	<description>Submit data from web form into SugarCRM.</description>
+	<namespace>2buy2\Module\StaffSpotlight</namespace>
+	<install>
+	     <sql>
+	         <file driver="mysql" charset="utf8">sql/mysql/install.mysql.utf8.sql</file>
+	     </sql>
+	</install>
+	<uninstall>
+	     <sql>
+	         <file driver="mysql" charset="utf8">sql/mysql/uninstall.mysql.utf8.sql</file>
+	     </sql>
+	</uninstall>
+	<files>
+		<filename>mod_aggregation.xml</filename>
+		<filename module="mod_aggregation">mod_aggregation.php</filename>
+		<filename>helper.php</filename>
+		<filename>index.html</filename>
+		<folder>tmpl</folder>
+		<folder>assets</folder>
+		<folder>sql</folder>
+	</files>
+	<languages folder="language">
+		<language tag="en-GB">en-GB/en-GB.mod_aggregation.ini</language>
+	</languages>
+	<config>
+		<fields name="params">
+			<fieldset name="basic">
+				<field name="template" type="list" default="" required="true" label="Select a display option" description="Dynamic requires SugarCRM integration">
+				  <option value="">Please Select</option>
+				  <option value="dynamic">Dynamic</option>
+				  <option value="basic">Basic</option>
+				  <option value="list">Team list</option>
+				</field>
+				<field name="user"
+				    type="sql"
+				    label="Select user"
+				    query="SELECT u.id , u.name FROM #__users as u inner join #__user_usergroup_map AS ugm ON ugm.user_id = u.id where ugm.group_id=7 and u.block = 0"
+				    key_field="id" 
+                	value_field="name"
+                	default=""
+                	showon="template:basic"
+				    >
+				    <option value="">Please select your option</option>
+				</field>
+				<field name="userlist"
+				    type="sql"
+				    label="Select user"
+				    query="SELECT u.id , u.name FROM #__users as u inner join #__user_usergroup_map AS ugm ON ugm.user_id = u.id where ugm.group_id=7 and u.block = 0"
+				    key_field="id" 
+                	value_field="name"
+                	default=""
+                	showon="template:list"
+                	multiple="multiple"
+				    >
+				    <option value="">Please select your option</option>
+				</field>
+				<field name="displayName" type="radio" default="1" label="Display name" description="" class="btn-group btn-group-yesno" required="true">
+				  <option value="1">JYes</option>
+				  <option value="0">JNo</option>
+				</field>
+				<field name="displayEmail" type="radio" default="1" label="Display email address" description="" class="btn-group btn-group-yesno" required="true">
+				  <option value="1">JYes</option>
+				  <option value="0">JNo</option>
+				</field>
+				<field name="displayPosition" type="radio" default="1" label="Display job role" description="" class="btn-group btn-group-yesno" required="true">
+				  <option value="1">JYes</option>
+				  <option value="0">JNo</option>
+				</field>
+				<field name="displayPhoto" type="radio" default="1" label="Display photograph" description="" class="btn-group btn-group-yesno" required="true">
+				  <option value="1">JYes</option>
+				  <option value="0">JNo</option>
+				</field>
+				<field name="displayPhotoType" type="radio" default="avatar_clean" label="Which version of the photograph?" description="" class="btn-group" showon="displayPhoto:1">
+				  <option value="avatar_clean">Original</option>
+				  <option value="avatar_mini">Thumbnail</option>
+				</field>
+				<field name="displayPhotoPosition" type="radio" default="left" label="Position of photograph" description="" class="btn-group" showon="displayPhoto:1">
+				  <option value="top">Top</option>
+				  <option value="right">Right</option>
+				  <option value="bottom">Bottom</option>
+				  <option value="left">Left</option>
+				</field>
+				<field name="displayPhotoSize" type="radio" default="left" label="Size of photograph" description="" class="btn-group" showon="displayPhoto:1[AND]displayPhotoPosition:left[OR]displayPhotoPosition:right">
+				  <option value="1-1">100%</option>
+				  <option value="4-5">80%</option>
+				  <option value="3-4">75%</option>
+				  <option value="2-3">66.6%</option>
+				  <option value="3-5">60%</option>
+				  <option value="1-2">50%</option>
+				  <option value="2-5">40%</option>
+				  <option value="1-3">33.3%</option>
+				  <option value="1-4">25%</option>
+				  <option value="1-5">20%</option>
+				</field>
+				<field name="displayContent" type="radio" default="1" label="Which content do you want to show?" description="" class="btn-group" required="true">
+					<option value="none">None</option>
+				  <option value="blurb">Blurb</option>
+				  <option value="quote">Quote</option>
+				</field>
+				<field name="displayRegions" type="radio" default="1" label="Display assigned regions" description="" class="btn-group btn-group-yesno" required="true">
+				  <option value="1">JYes</option>
+				  <option value="0">JNo</option>
+				</field>
+				<field name="displayForm" type="radio" default="1" label="Display a contact form" description="" class="btn-group btn-group-yesno" required="true">
+				  <option value="1">JYes</option>
+				  <option value="0">JNo</option>
+				</field>
+			</fieldset>
+		</fields>
+	</config>
+</extension>
