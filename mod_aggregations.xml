@@ -7,9 +7,9 @@
 	<license>GNU General Public License version 2 or later</license>
 	<authorEmail>david.hendy@2buy2.com</authorEmail>
 	<authorURL>http://www.2buy2.com/</authorURL>
-	<version>0.0.1</version>
+	<version>0.1.0</version>
 	<description>Submit data from web form into SugarCRM.</description>
-	<namespace>2buy2\Module\StaffSpotlight</namespace>
+	<namespace>2buy2\Module\Aggregations</namespace>
 	<install>
 	     <sql>
 	         <file driver="mysql" charset="utf8">sql/mysql/install.mysql.utf8.sql</file>
@@ -21,8 +21,8 @@
 	     </sql>
 	</uninstall>
 	<files>
-		<filename>mod_aggregation.xml</filename>
-		<filename module="mod_aggregation">mod_aggregation.php</filename>
+		<filename>mod_aggregations.xml</filename>
+		<filename module="mod_aggregations">mod_aggregations.php</filename>
 		<filename>helper.php</filename>
 		<filename>index.html</filename>
 		<folder>tmpl</folder>
@@ -30,90 +30,58 @@
 		<folder>sql</folder>
 	</files>
 	<languages folder="language">
-		<language tag="en-GB">en-GB/en-GB.mod_aggregation.ini</language>
+		<language tag="en-GB">en-GB/en-GB.mod_aggregations.ini</language>
 	</languages>
 	<config>
 		<fields name="params">
 			<fieldset name="basic">
-				<field name="template" type="list" default="" required="true" label="Select a display option" description="Dynamic requires SugarCRM integration">
+				<field name="template" type="list" default="" required="true" label="Select a display option" >
 				  <option value="">Please Select</option>
-				  <option value="dynamic">Dynamic</option>
-				  <option value="basic">Basic</option>
-				  <option value="list">Team list</option>
+				  <option value="phase1">Basic</option>
 				</field>
-				<field name="user"
-				    type="sql"
-				    label="Select user"
-				    query="SELECT u.id , u.name FROM #__users as u inner join #__user_usergroup_map AS ugm ON ugm.user_id = u.id where ugm.group_id=7 and u.block = 0"
-				    key_field="id" 
-                	value_field="name"
-                	default=""
-                	showon="template:basic"
-				    >
-				    <option value="">Please select your option</option>
+				<field name="subcategory" type="list" required="true" default="" label="Select a category" description="Which category is this form linking against?">
+					<option value="">Please Select</option>
+					<option value="Auditor Services">Auditor Services</option>
+					<option value="Building and Facilities Management Services">Building and Facilities Management Services</option>
+					<option value="Catering">Catering</option>
+					<option value="Cleaning">Cleaning</option>
+					<option value="Consultancy">Consultancy</option>
+					<option value="DBS_Checks">DBS Checks</option>
+					<option value="Educational">Educational Supplies</option>
+					<option value="Electricity">Electricity</option>
+					<option value="Energy Management Services">Energy Management Services</option>
+					<option value="Financial Software">Financial Software</option>
+					<option value="Fire Safety">Fire Safety</option>
+					<option value="Furniture">Furniture</option>
+					<option value="Gas">Gas</option>
+					<option value="Grounds Maintenance">Grounds Maintenance</option>
+					<option value="Human Resources">Human Resources</option>
+					<option value="Insurance">Insurance</option>
+					<option value="IT Hardware">IT Hardware</option>
+					<option value="IT Maintenance and Support">IT Maintenance and Support</option>
+					<option value="IT Software">IT Software</option>
+					<option value="LED Lighting">LED Lighting</option>
+					<option value="Legal">Legal</option>
+					<option value="Mechanical and Electrical Engineering Services">Mechanical and Electrical Engineering Services</option>
+					<option value="Oil">Oil</option>
+					<option value="Payroll">Payroll</option>
+					<option value="Photocopying">Photocopying</option>
+					<option value="Project Management Services">Project Management Services</option>
+					<option value="Security Services">Security Services</option>
+					<option value="Solar Energy Panels">Solar Energy Panels</option>
+					<option value="Stationery">Stationery</option>
+					<option value="Supply and Agency Staff">Supply and Agency Staff</option>
+					<option value="Telecoms Broadband">Telecoms Broadband</option>
+					<option value="Telecoms Landline">Telecoms Landline</option>
+					<option value="Telecoms Mobile">Telecoms Mobile</option>
+					<option value="Telecoms Systems">Telecoms Systems</option>
+					<option value="Transport Services">Transport Services</option>
+					<option value="Waste Management">Waste Management</option>
+					<option value="Water">Water</option>
+					<option value="Web Development">Web Development</option>
 				</field>
-				<field name="userlist"
-				    type="sql"
-				    label="Select user"
-				    query="SELECT u.id , u.name FROM #__users as u inner join #__user_usergroup_map AS ugm ON ugm.user_id = u.id where ugm.group_id=7 and u.block = 0"
-				    key_field="id" 
-                	value_field="name"
-                	default=""
-                	showon="template:list"
-                	multiple="multiple"
-				    >
-				    <option value="">Please select your option</option>
-				</field>
-				<field name="displayName" type="radio" default="1" label="Display name" description="" class="btn-group btn-group-yesno" required="true">
-				  <option value="1">JYes</option>
-				  <option value="0">JNo</option>
-				</field>
-				<field name="displayEmail" type="radio" default="1" label="Display email address" description="" class="btn-group btn-group-yesno" required="true">
-				  <option value="1">JYes</option>
-				  <option value="0">JNo</option>
-				</field>
-				<field name="displayPosition" type="radio" default="1" label="Display job role" description="" class="btn-group btn-group-yesno" required="true">
-				  <option value="1">JYes</option>
-				  <option value="0">JNo</option>
-				</field>
-				<field name="displayPhoto" type="radio" default="1" label="Display photograph" description="" class="btn-group btn-group-yesno" required="true">
-				  <option value="1">JYes</option>
-				  <option value="0">JNo</option>
-				</field>
-				<field name="displayPhotoType" type="radio" default="avatar_clean" label="Which version of the photograph?" description="" class="btn-group" showon="displayPhoto:1">
-				  <option value="avatar_clean">Original</option>
-				  <option value="avatar_mini">Thumbnail</option>
-				</field>
-				<field name="displayPhotoPosition" type="radio" default="left" label="Position of photograph" description="" class="btn-group" showon="displayPhoto:1">
-				  <option value="top">Top</option>
-				  <option value="right">Right</option>
-				  <option value="bottom">Bottom</option>
-				  <option value="left">Left</option>
-				</field>
-				<field name="displayPhotoSize" type="radio" default="left" label="Size of photograph" description="" class="btn-group" showon="displayPhoto:1[AND]displayPhotoPosition:left[OR]displayPhotoPosition:right">
-				  <option value="1-1">100%</option>
-				  <option value="4-5">80%</option>
-				  <option value="3-4">75%</option>
-				  <option value="2-3">66.6%</option>
-				  <option value="3-5">60%</option>
-				  <option value="1-2">50%</option>
-				  <option value="2-5">40%</option>
-				  <option value="1-3">33.3%</option>
-				  <option value="1-4">25%</option>
-				  <option value="1-5">20%</option>
-				</field>
-				<field name="displayContent" type="radio" default="1" label="Which content do you want to show?" description="" class="btn-group" required="true">
-					<option value="none">None</option>
-				  <option value="blurb">Blurb</option>
-				  <option value="quote">Quote</option>
-				</field>
-				<field name="displayRegions" type="radio" default="1" label="Display assigned regions" description="" class="btn-group btn-group-yesno" required="true">
-				  <option value="1">JYes</option>
-				  <option value="0">JNo</option>
-				</field>
-				<field name="displayForm" type="radio" default="1" label="Display a contact form" description="" class="btn-group btn-group-yesno" required="true">
-				  <option value="1">JYes</option>
-				  <option value="0">JNo</option>
+				<field name="crm_supplier" type="list" required="true" label="Select a supplier" description="Which supplier(s) is this form linking against?" multiple="multiple">
+					<option value="6470f9c2-4c65-11e8-9bbf-00155d543e05">Banner</option>
 				</field>
 			</fieldset>
 		</fields>
