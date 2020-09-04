@@ -144,7 +144,7 @@ $module = new modAggregationsHelper;
 		<div class="uk-margin">
 			<h3>Thank you for submitting the form</h3>
 			<p id="message"></p>
-			<a href="<?= Route::_('index.php?option=com_content&view=article&id=112'); ?>" class="uk-button uk-button-primary">View more deals</a>
+			<a href="<?= Route::_('index.php?option=com_content&view=article&id=153'); ?>" class="uk-button uk-button-primary">View more deals</a>
 		</div>
 
 	</fieldset>
