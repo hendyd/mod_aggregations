@@ -28,19 +28,21 @@
 		<folder>tmpl</folder>
 		<folder>assets</folder>
 		<folder>sql</folder>
+		<folder>libraries</folder>
 	</files>
 	<languages folder="language">
 		<language tag="en-GB">en-GB/en-GB.mod_aggregations.ini</language>
 	</languages>
 	<config>
 		<fields name="params">
-			<fieldset name="basic">
+			<fieldset name="basic" addfieldpath="/modules/mod_aggregations/models/fields">
 				<field name="template" type="list" default="" required="true" label="Select a display option" >
 				  <option value="">Please Select</option>
 				  <option value="phase1">Basic</option>
+				  <option value="phase2">Further dev</option>
 				</field>
-				<field name="subcategory" type="list" required="true" default="" label="Select a category" description="Which category is this form linking against?">
-					<option value="">Please Select</option>
+				<field name="subcategory" type="list" required="true" default="none" label="Select a category" description="Which category is this form linking against?">
+					<option value="none">Please Select</option>
 					<option value="Auditor Services">Auditor Services</option>
 					<option value="Building and Facilities Management Services">Building and Facilities Management Services</option>
 					<option value="Catering">Catering</option>
@@ -80,6 +82,43 @@
 					<option value="Water">Water</option>
 					<option value="Web Development">Web Development</option>
 				</field>
+				<!-- <field name="select-supplier" type="Suppliers" required="true" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory!:none"/> -->
+
+
+
+
+
+
+				<field name="select-supplier-auditor" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Auditor Services"/>
+				<field name="select-supplier-bfms" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Building and Facilities Management Services"/>
+				<field name="select-supplier-catering" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Catering"/>
+				<field name="select-supplier-cleaning" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Cleaning"/>
+				<field name="select-supplier-consultancy" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Consultancy"/>
+				<field name="select-supplier-dbs" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:DBS_Checks"/>
+				
+				<field name="select-supplier-educational" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Educational"/>
+				<field name="select-supplier-ems" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Energy Management Services"/>
+				<field name="select-supplier-finsoft" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Financial Software"/>
+				<field name="select-supplier-fire" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Fire Safety"/>
+				<field name="select-supplier-furniture" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Furniture"/>
+				<field name="select-supplier-gas" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Gas"/>
+				<field name="select-supplier-groundsmain" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Grounds Maintenance"/>
+				<field name="select-supplier-hr" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Human Resources"/>
+				<field name="select-supplier-insurance" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Insurance"/>
+				<field name="select-supplier-ithard" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:IT Hardware"/>
+				<field name="select-supplier-itmain" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:IT Maintenance and Support"/>
+				<field name="select-supplier-itmain" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:IT Maintenance and Support"/>
+
+
+
+
+
+
+
+
+				<field name="select-supplier-stationery" type="Suppliers" required="true" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Stationery"/>
+
+
 				<field name="crm_supplier" type="list" required="true" label="Select a supplier" description="Which supplier(s) is this form linking against?" multiple="multiple">
 					<option value="6470f9c2-4c65-11e8-9bbf-00155d543e05">Banner</option>
 				</field>
