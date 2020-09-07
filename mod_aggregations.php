@@ -13,6 +13,7 @@ $helper = new modAggregationsHelper;
 $subcat = $helper->getParams($params, 'subcategory');
 $cat = $helper->mapCategory($subcat);
 $template = $helper->getParams($params, 'template');
-$supplier = $helper->getParams($params, 'crm_supplier');
+//$supplier = $helper->getParams($params, 'crm_supplier');
+$supplier = $helper->getParams($params, 'select-supplier');
 $user = Factory::getUser();
 require ModuleHelper::getLayoutPath('mod_aggregations', $template);
