@@ -1,13 +1,13 @@
 <?php
 defined('_JEXEC') or die;
-define('MOD_AGGREGATIONS', JPATH_SITE.'/modules/mod_aggregations');
+define('MOD_AGGREGATIONS', '/modules/mod_aggregations');
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Router\Route;
+use Joomla\CMS\Uri\Uri;
 
 $doc = Factory::getDocument();
-
-$doc->addScript('/modules/mod_aggregations/assets/js/mod_aggregations.js');
+$doc->addScript('http://localhost/modules/mod_aggregations/assets/js/mod_aggregations.js');
 
 
 $module = new modAggregationsHelper;
@@ -50,20 +50,14 @@ $module = new modAggregationsHelper;
 				</div>
 			</div>
 		</div>
-		<div class="uk-margin-remove-left uk-child-width-1-4@l uk-child-width-1-2@m" uk-grid>
+		<div class="uk-margin-remove-left uk-child-width-1-3@m" uk-grid>
 			<div class="uk-padding-remove">
-				<label class="uk-form-label" for="spend">Estimated annual spend *</label>
-				<div class="uk-form-controls">
-					<input type="text" id="spend" class="uk-input" name="spend" required />
-				</div>
-			</div>
-			<div>
 				<label class="uk-form-label" for="opening">School opening times *</label>
 				<div class="uk-form-controls">
 					<input type="text" id="opening" class="uk-input" name="opening" required />
 				</div>
 			</div>
-			<div class="uk-padding-remove@l">
+			<div>
 				<label class="uk-form-label" for="estdelivery">Estimated delivery frequency (ie. 2 times per week) *</label>
 				<div class="uk-form-controls">
 					<input type="text" id="estdelivery" class="uk-input" name="estdelivery" required />
@@ -151,7 +145,7 @@ $module = new modAggregationsHelper;
 		<div class="uk-margin">
 			<h3>Thank you for submitting the form</h3>
 			<p id="message"></p>
-			<a href="<?= Route::_('index.php?option=com_content&view=article&id=153'); ?>" class="uk-button uk-button-primary">View more deals</a>
+			<a href="<?= Route::_('index.php?option=com_content&view=article&id=112'); ?>" class="uk-button uk-button-primary">View more deals</a>
 		</div>
 
 	</fieldset>
