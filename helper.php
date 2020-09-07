@@ -1,5 +1,6 @@
 <?php
 defined('_JEXEC') or die;
+define('MOD_AGGREGATIONS', JPATH_SITE.'/modules/mod_aggregations');
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Exception\ExceptionHandler;
@@ -17,6 +18,11 @@ use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Helper\ModuleHelper;
 use Joomla\CMS\Response\JsonResponse;
 
+if(!@include_once MOD_AGGREGATIONS.'/libraries/sugarcrm.php'):
+	Log::add('Not included sugarcrm.php file. populateFormAjax() not executed', Log::ERROR, 'mod_aggregations');
+	echo 'not included'; die();
+endif;
+
 class modAggregationsHelper{
 
 	function __construct()
@@ -26,7 +32,7 @@ class modAggregationsHelper{
 		$this->app = Factory::getApplication();
 	}
 
-	public function getParams($params, $type)
+	public function getParams($params,$type)
 	{
 		return $params->get($type);
 	}
@@ -84,43 +90,12 @@ class modAggregationsHelper{
 		return $cat;
 	}
 
-	public function getCRMData(string $base_url, object $oauth2_token_response, string $module, string $record = null, array $filter = null): object
-	{
-		if(!empty($record)):
-			$url = $base_url.'/'.$module.'/'.$record;
-			$record_response = call($url, $oauth2_token_response->access_token, 'GET');
-		elseif(!empty($filter)):
-			$params = array(
-				'filter' => array($filter)
-			);
-			$url = $base_url.'/'.$module.'/filter';
-			$record_response = call($url, $oauth2_token_response->access_token, 'GET', $params);
-		endif;
-		if(isset($record_response->error)){
-			if(is_array($record_response->error_message)){
-				$error = $record_response->error_message[0];
-			} else {
-				$error = $record_response->error_message;
-			}
-			Log::add('CRM Data error: '.$error, Log::ERROR, 'mod_aggregations');
-			return $error; die();
-		} else {
-			return $record_response;
-			Log::add('CRM integration worked as expected. Module: '.$module, Log::DEBUG, 'mod_aggregations');
-		}
-	}
-
 	public function populateFormAjax()
 	{
-		if(!@include_once JPATH_BASE.'/includes/SugarCode.php'):
-			Log::add('Not included SugarCode.php file. populateFormAjax() not executed', Log::ERROR, 'mod_aggregations');
-			echo 'not included'; die();
-		endif;
-		$helper = new modAggregationsHelper;
 		$post = Factory::getApplication()->input->post;
 		$user = Factory::getUser();
-		$getContact = $helper->getCRMData($base_url, $oauth2_token_response, 'Contacts', '', array('email1' => $post->get('email', '', 'string'), 'platform_c' => 'sbhnw'));
-		$getAccount = $helper->getCRMData($base_url, $oauth2_token_response, 'Accounts', $getContact->records[0]->account_id);
+		$getContact = SugarCRM::getCRMData('Contacts', '', array('email1' => $post->get('email', '', 'string'), 'platform_c' => 'sbhnw'));
+		$getAccount = SugarCRM::getCRMData('Accounts', $getContact->records[0]->account_id);
 		if(!empty($getContact) && !empty($getAccount)):
 			echo new JsonResponse(
 				(object) array(
@@ -143,24 +118,6 @@ class modAggregationsHelper{
 			echo new JsonResponse('Error retrieving account data', 'Failure', true, true);
 			Log::add('Form values not populated on pageload', Log::ERROR, 'mod_aggregations');
 		endif;
-	}
-
-	public function getSuppliersAjax()
-	{
-		$helper = new modAggregationsHelper;
-		echo new JsonResponse(
-			$helper->getCRMData(
-				$base_url, 
-				$oauth2_token_response, 
-				'fm_Suppliers', 
-				'', 
-				array(
-					'subcategory_c' => array(
-						'$contains' => $post->get('subcategory','', 'string')
-					)
-				)
-			), 'Success', false, true
-		);
 	}
 
 	public function submitFormAjax()
@@ -253,7 +210,7 @@ class modAggregationsHelper{
 
 		$helper = new modAggregationsHelper;
 		$crm_supplier = $helper->getSupplier($post->supplier);
-		$message = str_replace(array('[SUPPLIERNAME]', '[SUBMISSIONDETAILS]'), array($crm_supplier->name, $submission_data), $message);
+		$message = str_replace(array('[SUPPLIERNAME]', '[SUBMISSIONDETAILS]'), array($crm_supplier->name, $helper->parseSubmissionForEmail($post)), $message);
 		foreach($crm_supplier->email as $email){
 			$send = $helper->sendEmail($message, 'A new form submission from Schools\' Buying Hub North West',$email->email_address);
 		}
@@ -263,10 +220,19 @@ class modAggregationsHelper{
 	protected function customerEmail(object $post)
 	{
 		$helper = new modAggregationsHelper;
+
+		switch($post->subcategory){
+			case 'Stationery':
+				$post->subcategory = 'Office Supplies';
+				break;
+			default:
+				break;
+		}
+
 		$message = 
 		"<p>Hi ".$post->contactname."</p>
-		<p>Thank you for completing the form. One of our Procurement Specialists will be in touch with you to discuss this further.</p>
-		<p>Regards,<br />The Schools' Buying Hub North West team</p>";
+		<p>Thank you for completing our ".ucfirst($post->subcategory)." form. One of our Procurement specialists will be in touch shortly to discuss this group deal further and answer any questions you may have.</p>
+		<p>Many thanks,<br />The Schools' Buying Hub North West team</p>";
 		return $helper->sendEmail($message, 'Thank you for completing the web form', $post->contactemail);
 	}
 
@@ -280,25 +246,52 @@ class modAggregationsHelper{
 		<ul>[SUBMISSIONDETAILS]</ul>
 		<p>Regards,<br />The Schools\' Buying Hub North West</p>';
 
-		$submission_data = '';
-		foreach($post as $key => $value){
-			$submission_data.= '<li><strong>'.ucfirst($key).': </strong>'.$value.'</li>';
-		}
-
-		$message = str_replace(array('[SUPPLIERNAME]', '[SUBMISSIONDETAILS]'), array('Schools\' Buying Hub North West', $submission_data), $message);
+		$message = str_replace(array('[SUPPLIERNAME]', '[SUBMISSIONDETAILS]'), array('Schools\' Buying Hub North West', $helper->parseSubmissionForEmail($post)), $message);
 		return $helper->sendEmail($message, '[SBHNW]'.$post->contactname.' has completed the '.ucfirst($post->subcategory).' form', $post->contactemail);
+	}
+
+	protected function parseSubmissionForEmail($post)
+	{
+		$response = '';
+		foreach($post as $key => $value){
+			if(is_array($value)){
+				foreach($value as $answer){
+					$val .= $value.', ';
+				}
+			} else {
+				$val = $value;
+			}
+			$response.= '<li><strong>'.ucfirst(str_replace('_', ' ', $key)).': </strong>'.$val.'</li>';
+		}
+		return $response;
 	}
 
 	
 	protected function getSupplier(string $id = null): object
 	{
-		if(!@include_once JPATH_BASE.'/includes/SugarCode.php'):
-			Log::add('Not included SugarCode.php file', Log::ERROR, 'mod_aggregations');
-			echo 'not included'; die();
-		endif;
-		$helper = new modAggregationsHelper;
-		return $helper->getCRMData($base_url, $oauth2_token_response, 'fm_Suppliers', $id);
+		return SugarCRM::getCRMData('fm_Suppliers', $id);
 	}
+
+	public function getSuppliersAjax()
+	{	
+		$post = Factory::getApplication()->input->post;
+		$subcat = $post->get('subcat', '', 'string');
+
+		$suppliers = SugarCRM::getCRMData('fm_Suppliers', '', array(
+			'subcategory_c' => array(
+				'$contains' => $subcat
+			)
+		));
+
+		echo new JsonResponse(
+			(object) array(
+				'suppliers' => $suppliers
+			), 
+			'Success', false, true
+		);
+	}
+
+
 
 	public function isAdmin($user)
 	{
