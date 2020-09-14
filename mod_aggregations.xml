@@ -24,6 +24,7 @@
 	     </sql>
 	</uninstall>
 	<files>
+		<filename>update_mod.xml</filename>
 		<filename>mod_aggregations.xml</filename>
 		<filename module="mod_aggregations">mod_aggregations.php</filename>
 		<filename>helper.php</filename>
