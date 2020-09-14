@@ -10,6 +10,9 @@
 	<version>0.1.0</version>
 	<description>Submit data from web form into SugarCRM.</description>
 	<namespace>2buy2\Module\Aggregations</namespace>
+	<updateservers>
+		<server type="extension" name="Aggregtion Web Form" priority="1">https://github.com/hendyd/mod_aggregations/blob/master/update_mod.xml</server>
+	</updateservers>
 	<install>
 	     <sql>
 	         <file driver="mysql" charset="utf8">sql/mysql/install.mysql.utf8.sql</file>
