@@ -16,7 +16,7 @@ $module = new modAggregationsHelper;
 <form method="post" action="index.php?option=com_ajax&module=aggregations&format=raw&method=submitForm" id="agg-form" class="uk-form-stacked">
 	<fieldset id="agg-form0" data-id="0">
 		<div class="uk-margin">
-			<progress class="uk-progress" value="1" max="3"></progress>
+			<progress class="uk-progress" value="1" max="2"></progress>
 		</div>
 		<div class="uk-margin">
 			<h3>School information</h3>
@@ -112,7 +112,7 @@ $module = new modAggregationsHelper;
 	</fieldset>	
 	<fieldset class="uk-hidden" id="agg-form1" data-id="1">
 		<div class="uk-margin">
-			<progress class="uk-progress" value="2" max="3"></progress>
+			<progress class="uk-progress" value="2" max="2"></progress>
 		</div>
 		<div class="uk-margin">
 			<h3>Your information</h3>
@@ -180,16 +180,5 @@ $module = new modAggregationsHelper;
 			<button type="button" id="prev" class="uk-button uk-button-secondary uk-margin-right">Previous</button>
 			<button type="submit" id="submit" class="uk-button uk-button-primary">Submit</button>
 		</div>
-	</fieldset>
-	<fieldset class="uk-hidden" id="agg-form2" data-id="2">
-		<div class="uk-margin">
-			<progress class="uk-progress" value="3" max="3"></progress>
-		</div>
-		<div class="uk-margin">
-			<h3>Thank you for submitting the form</h3>
-			<p id="message"></p>
-			<a href="<?= Route::_('index.php?option=com_content&view=article&id=112'); ?>" class="uk-button uk-button-primary">View more deals</a>
-		</div>
-
 	</fieldset>
 </form>
