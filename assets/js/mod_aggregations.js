@@ -7,40 +7,6 @@ function uiMessage(msg, status){
     });
 }
 
-function populateForm(email, subcat)
-{
-	if(email.length > 0){
-		var populate = jQuery.ajax({
-			url: 'index.php?option=com_ajax&module=aggregations&format=raw&method=populateForm',
-			data: {'email': email, 'subcategory': subcat},
-			type: 'POST',
-			dataType: 'JSON',
-			beforeSend: function(){}
-		}).done(function(data){
-			var response = data.data;
-			jQuery('#account_name').val(response.crm.account.name);
-
-			jQuery('#shipping_street').val(response.crm.account.shipping_address_street);
-			jQuery('#shipping_street2').val(response.crm.account.shipping_address_street_2);
-			jQuery('#shipping_city').val(response.crm.account.shipping_address_city);
-			jQuery('#shipping_postalcode').val(response.crm.account.shipping_address_postalcode);
-
-			jQuery('#billing_street').val(response.crm.account.billing_address_street);
-			jQuery('#billing_street2').val(response.crm.account.billing_address_street_2);
-			jQuery('#billing_city').val(response.crm.account.billing_address_city);
-			jQuery('#billing_postalcode').val(response.crm.account.billing_address_postalcode);
-
-			jQuery('#contactname').val(response.joomla.user.name);
-			jQuery('#contacttel').val(response.crm.account.phone_work);
-			jQuery('#userid').val(response.joomla.user.id);
-		}).error(function(xhr, textStatus, error){
-			console.log(xhr);
-			console.log(textStatus);
-			console.log(error);
-		});
-	}
-}
-
 function submitForm()
 {
 	var formData = jQuery('#agg-form').serializeArray().reduce(
@@ -90,45 +56,47 @@ function address()
 	jQuery('#billing_postalcode').val(jQuery('#shipping_postalcode').val());
 }
 
-function isValid()
+function isValid(id)
 {
 	var fieldsEmpty = [];
-	jQuery('input, select, textarea').filter('[required]').each(function(){
+	jQuery('#agg-form'+id+' input, #agg-form'+id+' select, #agg-form'+id+' textarea').filter('[required]').each(function(){
 		var input = jQuery(this),
 		    isCheckbox = input[0].type == 'checkbox',
-		    labelId = isCheckbox ? input.attr('id').substr(0, input.attr('id').length-1): input.attr('id'),
-		    labelText;
-		if((input.val() === '' && !isCheckbox )
-		   ||  (  isCheckbox && !anyChecked(input[0]) )) {
-		    labelText = jQuery("label[for='"+labelId+"']").text();
-		    if ( labelText ) {
-			labelText = labelText.replace('*', '').trim();
-			fieldsEmpty.push(labelText);
+		    labelId = jQuery(this).attr('data-name'),
+		    labelText = jQuery(this).attr('data-name');
+		if((input.val() === '' && !isCheckbox) || (isCheckbox && !anyChecked(input[0]))) {
+		    	labelText = jQuery(this).attr('data-name');
+		    if (labelText) {
+				labelText = labelText.replace('*', '').trim();
+				fieldsEmpty.push(labelText.replaceAll('_', ' '));
 		    }
 		}
     });
     return fieldsEmpty;
 }
 
-jQuery(document).ready(function(){
-	populateForm(jQuery('#contactemail').val(), jQuery('#subcategory').val());
-});
-
-jQuery(document).on('click', '#agg-form #submit', function(e){
-	e.preventDefault();
-	var invalidAnswers = isValid();
+jQuery(document).on('submit', '#agg-form', function(e){
+	var invalidAnswers = jQuery.merge(isValid(0), isValid(1));
 	if(invalidAnswers.length > 0){
+		e.preventDefault();
 		jQuery(invalidAnswers).each(function(key, value){
 			uiMessage('Please enter an answer for: '+value, 'danger');
 		});
 	} else {
-		submitForm();
+		return;
 	}
 });
 
 jQuery(document).on('click', '#next', function(e){
-	e.preventDefault();
-	pageTransition(1);
+	var invalidAnswers = isValid(0);
+	if(invalidAnswers.length > 0){
+		e.preventDefault();
+		jQuery(invalidAnswers).each(function(key, value){
+			uiMessage('Please enter an answer for: '+value, 'danger');
+		});
+	} else {
+		pageTransition(1);
+	}
 });
 
 jQuery(document).on('click', '#prev', function(e){
@@ -136,8 +104,7 @@ jQuery(document).on('click', '#prev', function(e){
 	pageTransition(0);
 });
 
-jQuery(document).on('change', '#sameasshipping', function(e){
-	e.preventDefault();
+jQuery(document).on('change', '#sameasshipping', function(){
 	if(jQuery(this).is(':checked')){
 		address();
 	}

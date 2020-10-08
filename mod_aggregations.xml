@@ -7,9 +7,10 @@
 	<license>GNU General Public License version 2 or later</license>
 	<authorEmail>david.hendy@2buy2.com</authorEmail>
 	<authorURL>http://www.2buy2.com/</authorURL>
-	<version>0.1.0</version>
-	<description>Submit data from web form into SugarCRM.</description>
+	<version>0.1.2</version>
+	<description><![CDATA[MOD_AGGREGATION_DESC]]></description>
 	<namespace>2buy2\Module\Aggregations</namespace>
+	<scriptfile>script.php</scriptfile>
 	<install>
 	     <sql>
 	         <file driver="mysql" charset="utf8">sql/mysql/install.mysql.utf8.sql</file>
@@ -20,6 +21,11 @@
 	         <file driver="mysql" charset="utf8">sql/mysql/uninstall.mysql.utf8.sql</file>
 	     </sql>
 	</uninstall>
+	<update> <!-- Runs on update; New since J2.5 -->
+		<schemas>
+			<schemapath type="mysql">sql/updates/mysql</schemapath>
+		</schemas>
+	</update>
 	<files>
 		<filename>mod_aggregations.xml</filename>
 		<filename module="mod_aggregations">mod_aggregations.php</filename>
@@ -29,6 +35,7 @@
 		<folder>assets</folder>
 		<folder>sql</folder>
 		<folder>libraries</folder>
+		<folder>models</folder>
 	</files>
 	<languages folder="language">
 		<language tag="en-GB">en-GB/en-GB.mod_aggregations.ini</language>
@@ -82,20 +89,13 @@
 					<option value="Water">Water</option>
 					<option value="Web Development">Web Development</option>
 				</field>
-				<!-- <field name="select-supplier" type="Suppliers" required="true" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory!:none"/> -->
-
-
-
-
-
-
 				<field name="select-supplier-auditor" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Auditor Services"/>
 				<field name="select-supplier-bfms" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Building and Facilities Management Services"/>
 				<field name="select-supplier-catering" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Catering"/>
 				<field name="select-supplier-cleaning" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Cleaning"/>
 				<field name="select-supplier-consultancy" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Consultancy"/>
 				<field name="select-supplier-dbs" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:DBS_Checks"/>
-				
+				<field name="select-supplier-electricity" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Electricity"/>
 				<field name="select-supplier-educational" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Educational"/>
 				<field name="select-supplier-ems" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Energy Management Services"/>
 				<field name="select-supplier-finsoft" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Financial Software"/>
@@ -107,21 +107,33 @@
 				<field name="select-supplier-insurance" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Insurance"/>
 				<field name="select-supplier-ithard" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:IT Hardware"/>
 				<field name="select-supplier-itmain" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:IT Maintenance and Support"/>
-				<field name="select-supplier-itmain" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:IT Maintenance and Support"/>
-
-
-
-
-
-
-
-
+				<field name="select-supplier-itsoft" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:IT Software"/>
+				<field name="select-supplier-led" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:LED Lighting"/>
+				<field name="select-supplier-legal" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Legal"/>
+				<field name="select-supplier-mees" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Mechanical and Electrical Engineering Services"/>
+				<field name="select-supplier-oil" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Oil"/>
+				<field name="select-supplier-payroll" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Payroll"/>
+				<field name="select-supplier-photo" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Photocopying"/>
+				<field name="select-supplier-pms" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Project Management Services"/>
+				<field name="select-supplier-security" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Security Services"/>
+				<field name="select-supplier-solar" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Solar Energy Panels"/>
 				<field name="select-supplier-stationery" type="Suppliers" required="true" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Stationery"/>
-
-
-				<field name="crm_supplier" type="list" required="true" label="Select a supplier" description="Which supplier(s) is this form linking against?" multiple="multiple">
-					<option value="6470f9c2-4c65-11e8-9bbf-00155d543e05">Banner</option>
+				<field name="select-supplier-supplyagency" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Supply and Agency Staff"/>
+				<field name="select-supplier-broadband" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Telecoms Broadband"/>
+				<field name="select-supplier-landline" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Telecoms Landline"/>
+				<field name="select-supplier-mobile" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Telecoms Mobile"/>
+				<field name="select-supplier-telesys" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Telecoms Systems"/>
+				<field name="select-supplier-transport" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Transport Services"/>
+				<field name="select-supplier-waste" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Waste Management"/>
+				<field name="select-supplier-water" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Water"/>
+				<field name="select-supplier-webdev" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Web Development"/>
+				<field name="admin-email" type="subform" label="Email address to receive admin emails" description="Email address to receive admin emails" multiple="true" min="1" max="10">
+					<form>
+						<field name="admin-email-address" type="email" label="Email address" />
+					</form>
 				</field>
+				<field name="campaign" type="text" label="CRM Campaign ID" description="Paste in the SugarCRM Campaign ID" />
+				<field name="redirecturl" type="menuitem" default="45" label="Select a confirmation page" description="Select the menu item to redirect the users once the form is submitted" />
 			</fieldset>
 		</fields>
 	</config>

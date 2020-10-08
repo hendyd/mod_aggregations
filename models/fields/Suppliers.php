@@ -8,7 +8,6 @@ use Joomla\CMS\Form\Form;
 use Joomla\CMS\Form\FormHelper;
 use Joomla\CMS\Log\Log;
 
-
 FormHelper::loadFieldClass('list');
 
 class JFormFieldSuppliers extends JFormFieldList {
@@ -17,33 +16,13 @@ class JFormFieldSuppliers extends JFormFieldList {
 
 	protected function mapCategories($name)
 	{
-		$name = str_replace(array('jform[params][', '][]'), array('',''), $name);
-		switch($name)
-		{
-			case 'select-supplier-auditor':
-				$cat = 'Auditor Services';
-				break;
-			case 'select-supplier-bfms':
-				$cat = 'Building and Facilities Management Services';
-				break;
-			case 'select-supplier-catering':
-				$cat = 'Catering';
-				break;
-			case 'select-supplier-cleaning':
-				$cat = 'Cleaning';
-				break;
-			case 'select-supplier-consultancy':
-				$cat = 'Consultancy';
-				break;
-			case 'select-supplier-dbs':
-				$cat = 'DBS_Checks';
-				break;
-
-			default:
-				$cat = 'Stationery';
-				break;
-		}
-		return $cat;
+		$db = Factory::getDbo();
+		$query = $db
+		->getQuery(true)
+		->select($db->quoteName('crm_value'))
+		->from($db->quoteName('#__crm_subcategories'))
+		->where($db->quoteName('mod_aggregation_supplier_form_field').' = '.$db->quote($name));
+		return $db->setQuery($query)->loadResult();
 	}
 
 	public function getOptions()
@@ -52,15 +31,18 @@ class JFormFieldSuppliers extends JFormFieldList {
 			Log::add('Not included sugarcrm.php file. getOptions() not executed', Log::ERROR, 'mod_aggregations');
 			echo 'not included'; die();
 		endif;
-		
+
+		$name = str_replace(array('jform[params][', '][]'), array('',''), $this->name);
+
+
 		// get applicable suppliers
 		$json = 
 		SugarCRM::getCRMData('fm_Suppliers', '', array(
 			'subcategory_c' => array(
-				'$contains' => $this->mapCategories($this->name)
+				'$contains' => JFormFieldSuppliers::mapCategories($name)
 			)
 		));
-
+		
 		// iterate all CRM suppliers and add to Array
 		foreach($json->records as $supplier){
 			$supplierOptions[] = array(
