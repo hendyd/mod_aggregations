@@ -10,7 +10,6 @@
 	<version>0.1.2</version>
 	<description><![CDATA[MOD_AGGREGATION_DESC]]></description>
 	<namespace>2buy2\Module\Aggregations</namespace>
-	<scriptfile>script.php</scriptfile>
 	<install>
 	     <sql>
 	         <file driver="mysql" charset="utf8">sql/mysql/install.mysql.utf8.sql</file>
