@@ -7,7 +7,7 @@
 	<license>GNU General Public License version 2 or later</license>
 	<authorEmail>david.hendy@2buy2.com</authorEmail>
 	<authorURL>http://www.2buy2.com/</authorURL>
-	<version>0.1.2</version>
+	<version>0.1.4</version>
 	<description><![CDATA[MOD_AGGREGATION_DESC]]></description>
 	<namespace>2buy2\Module\Aggregations</namespace>
 	<install>
@@ -126,12 +126,22 @@
 				<field name="select-supplier-waste" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Waste Management"/>
 				<field name="select-supplier-water" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Water"/>
 				<field name="select-supplier-webdev" type="Suppliers" multiple="multiple" label="Select supplier(s)" description="" showon="subcategory:Web Development"/>
-				<field name="admin-email" type="subform" label="Email address to receive admin emails" description="Email address to receive admin emails" multiple="true" min="1" max="10">
+				<field name="sendSupplierEmail" type="radio" default="0" label="Send an email to the supplier?" description="" class="btn-group btn-group-yesno">
+					<option value="1">JYES</option>
+				  	<option value="0">JNO</option>
+				</field>
+				<field name="sendAdminEmail" type="radio" default="0" label="Send an email to admin?" description="" class="btn-group btn-group-yesno">
+				  	<option value="1">JYES</option>
+				  	<option value="0">JNO</option>
+				</field>
+				<field name="admin-email" type="subform" label="Email address to receive admin emails" description="Email address to receive admin emails" multiple="true" min="1" max="10" showon="sendAdminEmail:1">
 					<form>
 						<field name="admin-email-address" type="email" label="Email address" />
 					</form>
 				</field>
-				<field name="campaign" type="text" label="CRM Campaign ID" description="Paste in the SugarCRM Campaign ID" />
+				<field name="campaign" type="Campaigns" label="Select campaign" default="" description="">
+					<option value="">Please Select</option>
+				</field>
 				<field name="redirecturl" type="menuitem" default="45" label="Select a confirmation page" description="Select the menu item to redirect the users once the form is submitted" />
 			</fieldset>
 		</fields>

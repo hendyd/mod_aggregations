@@ -59,9 +59,10 @@ class modAggregationsHelper {
 
 	public function populateForm(): object
 	{
+		$helper = new modAggregationsHelper;
 		$user = Factory::getUser();
-		$getContact = SugarCRM::crmCall('GET', 'Contacts', '', array('email1' => $user->email, 'platform_c' => 'sbhnw'));
-		$getAccount = SugarCRM::crmCall('GET', 'Accounts', $getContact->records[0]->account_id);
+		$getContact = SugarCRM::api('GET', 'Contacts', array('email1' => $user->email, 'platform_c' => 'sbhnw'));
+		$getAccount = SugarCRM::api('GET', 'Accounts', '', $getContact->records[0]->account_id);
 		if(!empty($getContact) && !empty($getAccount)):
 			return (object) array(
 				'joomla' => (object) array(
@@ -105,42 +106,34 @@ class modAggregationsHelper {
 		$helper = new modAggregationsHelper;
 		$post = (object) Factory::getApplication()->input->post->get('agg_form', '', 'array');
 		$info = (object) Factory::getApplication()->input->post->get('info', '', 'array');
-		$allData = (object )array_merge(
+		$allData = (object) array_merge(
 			Factory::getApplication()->input->post->get('agg_form', '', 'array'), 
 			Factory::getApplication()->input->post->get('info', '', 'array')
 		);
 
 		if(!empty($post) && !empty($info)){
-			$getContact = SugarCRM::crmCall(
+			$searchOpp = SugarCRM::api(
 				'GET',
-				'Contacts', 
-				'', 
-				array('email1' => $post->contact_email, 'platform_c' => 'sbhnw')
-			);
-			$searchOpp = SugarCRM::crmCall(
-				'GET',
-				'Accounts', 
-				$getContact->records[0]->account_id,
-				$helper->crmOpportunity('GET', $allData), 
+				'Accounts',
+				$helper->crmOpportunity('GET', $allData),
+				$info->accountid,
 				'accounts_so_saving_opportunity_1'
 			);
-
 			if(empty($searchOpp->records)):
 				// create Opp
-				$opp = SugarCRM::crmCall(
-					'POST', 
+				$opp = SugarCRM::api(
+					'POST',
 					'Accounts',
-					$getContact->records[0]->account_id, 
-					$helper->crmOpportunity('POST', $allData), 
+					$helper->crmOpportunity('POST', $allData),
 					'accounts_so_saving_opportunity_1'
 				);
 			else:
 				// edit Opp
-				$opp = SugarCRM::crmCall(
-					'PUT', 
+				$opp = SugarCRM::api(
+					'PUT',
 					'SO_Saving_Opportunity',
-					$searchOpp->records[0]->id, 
-					$helper->crmOpportunity('PUT', $allData)
+					$helper->crmOpportunity('PUT', $allData),
+					$searchOpp->records[0]->id
 				);
 			endif;
 
@@ -298,7 +291,7 @@ class modAggregationsHelper {
 	
 	protected function getSupplier(string $id = null)
 	{
-		return SugarCRM::crmCall('GET', 'fm_Suppliers', $id);
+		return SugarCRM::api('GET', 'fm_Suppliers', '', $id);
 	}
 
 	public function getSuppliersAjax()
@@ -353,7 +346,7 @@ class modAggregationsHelper {
 					'request_type_c' => 'hub_service',
 					'category' => $post->category,
 					'subcategory' => $post->subcategory,
-					'campaign_c' => $post->campaign,
+					'campaign_id_c' => $post->campaign,
 					'spend_c' => str_replace('&pound;', '', $post->spend),
 					'phc_framework_so_saving_opportunity_1phc_framework_ida' => $framework,
 					'phc_framework_id_c' => $framework,
@@ -373,11 +366,12 @@ class modAggregationsHelper {
 				break;
 			case 'PUT':
 				return array(
+					'name' => $post->account_name.' - '.ucwords($post->category).' - '.ucwords($post->subcategory),
 					'opportunity_status_c' => 'closed',
 					'lead_source_c' => 'Web Site',
 					'savings_opp_type_c' => 'multi_school_complex',
 					'request_type_c' => 'hub_service',
-					'campaign_c' => $post->campaign,
+					'campaign_id_c' => $post->campaign,
 					'spend_c' => str_replace('&pound;', '', $post->spend),
 					'phc_framework_so_saving_opportunity_1phc_framework_ida' => $framework,
 					'phc_framework_id_c' => $framework,

@@ -4,11 +4,35 @@ defined('_JEXEC') or die('Restricted access');
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Log\Log;
+use Joomla\CMS\Response\JsonResponse;
 
 class SugarCRM {
+
     const status = 'live';
 
-    protected function base_url()
+    public function dbCredentials(): object
+    {
+        switch(SugarCRM::status){
+            case 'live':
+                return (object) array(
+                    'host' => '192.168.254.8',
+                    'user' => 'root',
+                    'password' => 'G0d15Gr34t!',
+                    'database' => 'crm_live'
+                );
+                break;
+            case 'dev':
+                return (object) array(
+                    'host' => '172.16.39.2',
+                    'user' => 'root',
+                    'password' => 'G0d15Gr34t!',
+                    'database' => 'crm_live'
+                );
+                break;
+        }
+    }
+
+    private function base_url(): string
     {
         $db = Factory::getDbo();
         $query = $db
@@ -16,11 +40,16 @@ class SugarCRM {
         ->select($db->quoteName('crm_baseurl'))
         ->from($db->quoteName('#__crm'))
         ->where($db->quoteName('status').' = '.$db->quote(SugarCRM::status));
-        $db->setQuery($query);
-        return $db->loadResult();
+        try {
+            $db->setQuery($query);
+            return $db->loadResult();
+        } catch(Exception $e){
+            echo new JsonResponse($e);
+            exit;
+        }
     }
 
-    protected function oauth()
+    private function oauthCredentials(): array
     {
         $db = Factory::getDbo();
         $query = $db
@@ -29,154 +58,106 @@ class SugarCRM {
         ->from($db->quoteName('#__crm'))
         ->where($db->quoteName('status').' = '.$db->quote(SugarCRM::status));
         $db->setQuery($query);
-        $crm_result = $db->loadObject();
-        return (object) array(
-            'url' => SugarCRM::base_url().'/oauth2/token',
-            'params' => array(
+        try{
+            $crm_result = $db->loadObject();
+            return array(
                 "grant_type" => "password",
                 "client_id" => $crm_result->crm_client_id,
                 "client_secret" => $crm_result->crm_client_secret,
                 "username" => $crm_result->crm_username,
                 "password" => $crm_result->crm_password,
                 "platform" => "sbhnw_website"
-            )
-        );
+            );
+        } catch(Exception $e){
+            echo new JsonResponse($e);
+            exit;
+        }
     }
 
-    public function crmCall(string $type = 'POST', string $module = null, string $record = null, array $criteria = array(), string $link_name = null): object
+    private function getOauth()
     {
-        $oauth2_token_response = SugarCRM::call(SugarCRM::oauth()->url, '', 'POST', SugarCRM::oauth()->params);
-        switch($type){
-            case 'POST':
-            case 'PUT':
-                if(!empty($link_name)):
-                    $url = SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$link_name;
-                elseif(!empty($record)):
-                    $url = SugarCRM::base_url().'/'.$module.'/'.$record;
-                else:
-                    $url = SugarCRM::base_url().'/'.$module;
-                endif;
-                $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, $type, $criteria);
+        try{
+            $oauth2_token_response = SugarCRM::call(SugarCRM::base_url(). "/oauth2/token", '', 'POST', SugarCRM::oauthCredentials());
+            return $oauth2_token_response->access_token;
+        } catch(Exception $e){
+            echo new JsonResponse($e);
+            exit;
+        }     
+    }
+
+    public function api(string $type = 'POST', string $module = null, $data = null, string $record = null, string $related = null, string $method = null)
+    {
+        $access_token = SugarCRM::getOauth();
+        switch(true){
+            case $type == 'GET' && $related != null && !empty($record) && !empty($data):
+                $record_response = SugarCRM::call(SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$related.'/filter', $access_token, $type, $data);
                 break;
-            case 'GET':
-                if(!empty($link_name)):
-                    if(!empty($criteria)):
-                        $params = array(
-                            'filter' => array($criteria)
-                        );
-                        $url = SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$link_name.'/filter';
-                        $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, $type, $params);
-                    else:
-                        $url = SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$link_name;
-                        $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, $type);
-                    endif;
-                elseif(!empty($record) && !empty($criteria)):
-                    $params = array(
-                        'filter' => array($criteria)
-                    );
-                    $url = SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$link_name.'/filter';
-                    $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, $type, $params);
-                elseif(!empty($record)):
-                    $url = SugarCRM::base_url().'/'.$module.'/'.$record;
-                    $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, $type);
-                elseif(!empty($criteria)):
-                    $params = array(
-                        'filter' => array($criteria)
-                    );
-                    $url = SugarCRM::base_url().'/'.$module.'/filter';
-                    $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, $type, $params);
-                endif;
+            case $type == 'GET' && $related != null && !empty($record):
+                $record_response = SugarCRM::call(SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$related, $access_token, $type);
+                break;
+            case $type == 'GET' && empty($record):
+                $record_response = SugarCRM::call(SugarCRM::base_url().'/'.$module.'/filter', $access_token, $type, array("filter" => array($data)));
                 break;
             default:
+                switch($record){
+                    case 'link':
+                        $record_response =  SugarCRM::call(SugarCRM::base_url().'/'.$data, $access_token, $type);
+                        break;
+                    case 'bulk':
+                        $record_response = SugarCRM::bulk_call(SugarCRM::base_url().'/bulk', $data, $access_token);
+                        break;                        
+                    default:
+                        switch($type){
+                            case 'GET':
+                            case 'DELETE':
+                                $record_response = SugarCRM::call(SugarCRM::base_url().'/'.$module.'/'.$record, $access_token, $type);
+                               break;
+                            case 'PUT':
+                                $record_response = SugarCRM::call(SugarCRM::base_url().'/'.$module.'/'.$record, $access_token, $type, $data);
+                                break;
+                            case 'POST':
+                                if(empty($related)):
+                                    $record_response = SugarCRM::call(SugarCRM::base_url().'/'.$module, $access_token, $type, $data);
+                                else:
+                                    $record_response = SugarCRM::call(SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$related, $access_token, $type, $data);
+                                endif;
+                                break;
+                        }
+                        break;
+                }
                 break;
         }
-        if(isset($record_response->error)){
-            if(is_array($record_response->error_message)){
-                $error = $record_response->error_message[0];
-            } else {
-                $error = $record_response->error_message;
-            }
-            Log::add('CRM Data error: '.$error, Log::ERROR, 'mod_aggregations');
-            return $error; die();
-        } else {
-            return $record_response;
-            Log::add('CRM '.$type.' integration worked as expected. Module: '.$module, Log::DEBUG, 'mod_aggregations');
-        }
-    }
-
-
-
-
-    public function postCRMData(string $type = 'POST', string $module = '', string $record = '', array $params = array(), string $link_name = '')
-    {
-        $oauth2_token_response = SugarCRM::call(SugarCRM::oauth()->url, '', 'POST', SugarCRM::oauth()->params);
-        if(!empty($link_name)):
-            $url = SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$link_name;
-        elseif(!empty($record)):
-            $url = SugarCRM::base_url().'/'.$module.'/'.$record;
+        if(isset($record_response->error)):
+            return $record_response->error_message;
+            exit;
+        elseif($method == 'AJAX'):
+            $responsejson = json_encode($record_response);
+            print_r($responsejson);
         else:
-            $url = SugarCRM::base_url().'/'.$module;
-        endif;
-        $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, $type, $params);
-        if(isset($record_response->error)){
-            if(is_array($record_response->error_message)){
-                $error = $record_response->error_message[0];
-            } else {
-                $error = $record_response->error_message;
-            }
-            Log::add('CRM Data error: '.$error, Log::ERROR, 'mod_aggregations');
-            return $error; die();
-        } else {
             return $record_response;
-            Log::add('CRM '.$type.' integration worked as expected. Module: '.$module, Log::DEBUG, 'mod_aggregations');
-        }
+        endif;
     }
 
-    // getCRM Data function
-    public function getCRMData(string $module,string $record = null,array $filter = array(), string $link_name = null)
-    {
-        $oauth2_token_response = SugarCRM::call(SugarCRM::oauth()->url, '', 'POST', SugarCRM::oauth()->params);
-        if(!empty($link_name)):
-            if(!empty($filter)):
-                $params = array(
-                    'filter' => array($filter)
-                );
-                $url = SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$link_name.'/filter';
-                $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, 'GET', $params);
-            else:
-                $url = SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$link_name;
-                $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, 'GET');
-            endif;
-        elseif(!empty($record) && !empty($filter)):
-            $params = array(
-                'filter' => array($filter)
-            );
-            $url = SugarCRM::base_url().'/'.$module.'/'.$record.'/link/'.$link_name.'/filter';
-            $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, 'GET', $params);
-        elseif(!empty($record)):
-            $url = SugarCRM::base_url().'/'.$module.'/'.$record;
-            $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, 'GET');
-        elseif(!empty($filter)):
-            $params = array(
-                'filter' => array($filter)
-            );
-            $url = SugarCRM::base_url().'/'.$module.'/filter';
-            $record_response = SugarCRM::call($url, $oauth2_token_response->access_token, 'GET', $params);
-        endif;
-        if(isset($record_response->error)){
-            if(is_array($record_response->error_message)){
-                $error = $record_response->error_message[0];
-            } else {
-                $error = $record_response->error_message;
-            }
-            Log::add('CRM Data error: '.$error, Log::ERROR, 'mod_aggregations');
-            return $error; die();
-        } else {
-            return $record_response;
-            Log::add('CRM integration worked as expected. Module: '.$module, Log::DEBUG, 'mod_aggregations');
-        }
+    protected function bulk_call(string $filter_url = null, array $filter_arguments = null, string $token = null): object
+    { 
+        $filter_request = curl_init($filter_url);
+        curl_setopt($filter_request, CURLOPT_HEADER, false);
+        curl_setopt($filter_request, CURLOPT_SSL_VERIFYPEER, 0);
+        curl_setopt($filter_request, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($filter_request, CURLOPT_FOLLOWLOCATION, 0);
+        curl_setopt($filter_request, CURLOPT_HTTPHEADER, array(
+            "Content-Type: application/json",
+            "oauth-token: {$token}"
+        ));
+        $json_arguments = json_encode($filter_arguments);
+        curl_setopt($filter_request, CURLOPT_POSTFIELDS, $json_arguments);
+        $filter_response = curl_exec($filter_request);
+        $filter_response_obj = json_decode($filter_response);
+        return $filter_response_obj;
     }
-    protected function call($url,$oauthtoken='',$type='GET',$arguments=array(),$encodeData=true,$returnHeaders=false)
+
+
+	public function call($url,$access_token='',$type='GET',$arguments=array(),$encodeData=true,$returnHeaders=false)
     {
         $type = strtoupper($type);
         if ($type == 'GET'){
@@ -194,14 +175,14 @@ class SugarCRM {
         curl_setopt($curl_request, CURLOPT_SSL_VERIFYPEER, 0);
         curl_setopt($curl_request, CURLOPT_RETURNTRANSFER, 1);
         curl_setopt($curl_request, CURLOPT_FOLLOWLOCATION, 0);
-        if(empty($oauthtoken)):
+        if(empty($access_token)):
             curl_setopt($curl_request, CURLOPT_HTTPHEADER, array(
                 "Content-Type: application/json"
             ));
         else:
             curl_setopt($curl_request, CURLOPT_HTTPHEADER, array(
                 "Content-Type: application/json",
-                "oauth-token: {$oauthtoken}"
+                "oauth-token: {$access_token}"
             ));
         endif;
         if (!empty($arguments) && $type !== 'GET'){
@@ -210,17 +191,23 @@ class SugarCRM {
             }
             curl_setopt($curl_request, CURLOPT_POSTFIELDS, $arguments);
         }
-        $result = curl_exec($curl_request);
-        if ($returnHeaders){
-            list($headers, $content) = explode("\r\n\r\n", $result ,2);
-            foreach (explode("\r\n",$headers) as $header){
-                header($header);
+        try {
+            $result = curl_exec($curl_request);
+            if ($returnHeaders){
+                list($headers, $content) = explode("\r\n\r\n", $result ,2);
+                foreach (explode("\r\n",$headers) as $header){
+                    header($header);
+                }
+                return trim($content);
             }
-            return trim($content);
+            curl_close($curl_request);
+            $response = json_decode($result);
+            return $response;
+            Log::add('SugarCRM - made a call', JLog::DEBUG, get_class($this).' - '.__FUNCTION__);
+        } catch (RuntimeException $e){
+            echo new JsonResponse($e);
+            exit;
         }
-        curl_close($curl_request);
-        $response = json_decode($result);
-        return $response;
     }
 
 

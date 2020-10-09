@@ -169,6 +169,7 @@ $module = new modAggregationsHelper;
 		<input type="hidden" name="agg_form[category]" value="<?= $cat; ?>" />
 		<input type="hidden" name="agg_form[subcategory]" value="<?= $subcat; ?>" />
 		<input type="hidden" name="info[redirect]" value="<?= $redirect; ?>" />
+		<input type="hidden" name="info[accountid]" value="<?= $populateForm->crm->account->id; ?>" />
 		<?php foreach($adminEmails as $key => $value): ?>
 			<input type="hidden" name="info[adminemail][]" value="<?= $module->encryptData($value->{'admin-email-address'}); ?>" />
 		<?php endforeach; ?>

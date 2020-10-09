@@ -37,7 +37,7 @@ class JFormFieldSuppliers extends JFormFieldList {
 
 		// get applicable suppliers
 		$json = 
-		SugarCRM::getCRMData('fm_Suppliers', '', array(
+		SugarCRM::crmCall('GET', 'fm_Suppliers', '', array(
 			'subcategory_c' => array(
 				'$contains' => JFormFieldSuppliers::mapCategories($name)
 			)
